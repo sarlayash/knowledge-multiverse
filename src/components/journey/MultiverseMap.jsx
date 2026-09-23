@@ -1,16 +1,24 @@
 import React, { useState } from 'react';
 import { useLearner } from '../../context/LearnerContext';
 import { LEVELS_DATA, DOMAINS } from '../../data/curriculumData';
-import { Lock, CheckCircle2, Sparkles, Compass, Filter } from 'lucide-react';
+import { PERSONAS } from '../../data/personaData';
+import { Lock, CheckCircle2, Sparkles, Compass, Filter, Target } from 'lucide-react';
 import ContextTrilogy from '../layout/ContextTrilogy';
 
 export default function MultiverseMap() {
-  const { currentLevel, completedLevels, openModal } = useLearner();
+  const { currentLevel, completedLevels, openModal, persona, trackViewMode, setTrackViewMode } = useLearner();
   const [selectedDomain, setSelectedDomain] = useState('all');
 
+  const activePersonaObj = PERSONAS[persona] || PERSONAS.college;
+
+  // Filter levels by track view mode AND domain
+  const trackFilteredLevels = trackViewMode === 'tailored'
+    ? LEVELS_DATA.filter(l => activePersonaObj.priorityLevels.includes(l.id))
+    : LEVELS_DATA;
+
   const filteredLevels = selectedDomain === 'all'
-    ? LEVELS_DATA
-    : LEVELS_DATA.filter(l => {
+    ? trackFilteredLevels
+    : trackFilteredLevels.filter(l => {
         const dom = DOMAINS.find(d => d.id === selectedDomain);
         return dom ? dom.levels.includes(l.id) : true;
       });
@@ -39,6 +47,32 @@ export default function MultiverseMap() {
             Planets Conquered
           </span>
         </div>
+      </div>
+
+      {/* Track Mode Switcher (Tailored vs All) */}
+      <div className="p-1 rounded-2xl bg-[#090d1a] border border-slate-800 flex items-center gap-1">
+        <button
+          onClick={() => setTrackViewMode('tailored')}
+          className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            trackViewMode === 'tailored'
+              ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 shadow-md shadow-amber-500/20'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Target className="w-3.5 h-3.5" />
+          <span>{activePersonaObj.title} Track ({activePersonaObj.priorityLevels.length})</span>
+        </button>
+        <button
+          onClick={() => setTrackViewMode('all')}
+          className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            trackViewMode === 'all'
+              ? 'bg-slate-800 text-amber-300 shadow-md'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Compass className="w-3.5 h-3.5" />
+          <span>All 25 Levels</span>
+        </button>
       </div>
 
       <ContextTrilogy />
@@ -135,13 +169,18 @@ export default function MultiverseMap() {
 
                     {/* Level Details */}
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
                           LEVEL {lvl.id}
                         </span>
-                        <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-slate-800 text-slate-300">
+                        <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">
                           {lvl.stage}
                         </span>
+                        {activePersonaObj.priorityLevels.includes(lvl.id) && (
+                          <span className={`text-[9px] font-black px-1.5 py-0.2 rounded bg-gradient-to-r ${activePersonaObj.badgeGradient} text-slate-950 uppercase tracking-tight`}>
+                            ★ {activePersonaObj.title} Pick
+                          </span>
+                        )}
                       </div>
                       <h3 className="font-extrabold text-sm text-white mt-0.5">
                         {lvl.title}

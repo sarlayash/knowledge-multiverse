@@ -37,7 +37,11 @@ const defaultInitialState = {
   dailyMission: defaultDailyMission,
   activeTab: 'home', // 'home' | 'journey' | 'learn' | 'practice' | 'achievements'
   activeModal: null, // 'search' | 'admin' | 'placement' | 'mock' | 'certificate' | 'levelDetail'
-  modalPayload: null
+  modalPayload: null,
+  persona: 'college', // 'school' | 'college' | 'professional'
+  personaGoal: '',
+  diagnosticScore: null, // { score, total, percentage, date }
+  trackViewMode: 'tailored' // 'tailored' | 'all'
 };
 
 const LearnerContext = createContext(null);
@@ -93,18 +97,38 @@ export function LearnerProvider({ children }) {
     }
   };
 
-  const setOnboarded = (name) => {
+  const setOnboarded = (name, persona = 'college', personaGoal = '', diagnosticResult = null) => {
     const trimmed = name.trim() || 'Learner';
+    const bonusXp = diagnosticResult ? (diagnosticResult.score * 35) : 0;
     setState(prev => ({
       ...prev,
       name: trimmed,
+      persona: persona || 'college',
+      personaGoal: personaGoal || '',
+      diagnosticScore: diagnosticResult || null,
       hasOnboarded: true,
       joinedAt: new Date().toISOString(),
-      xp: prev.xp + 50,
+      xp: prev.xp + 50 + bonusXp,
       unlockedBadges: [...new Set([...prev.unlockedBadges, 'first-step'])]
     }));
     playAudio('levelup');
     triggerConfetti();
+  };
+
+  const updatePersona = (persona, personaGoal = '') => {
+    setState(prev => ({
+      ...prev,
+      persona,
+      personaGoal: personaGoal || prev.personaGoal
+    }));
+    playAudio('click');
+  };
+
+  const setTrackViewMode = (mode) => {
+    setState(prev => ({
+      ...prev,
+      trackViewMode: mode
+    }));
   };
 
   const addXP = (amount) => {
@@ -358,6 +382,8 @@ export function LearnerProvider({ children }) {
         placementScore,
         placementStage: getPlacementStage(placementScore),
         setOnboarded,
+        updatePersona,
+        setTrackViewMode,
         addXP,
         completeLevel,
         recordAssessment,

@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLearner } from '../../context/LearnerContext';
 import { LEVELS_DATA } from '../../data/curriculumData';
 import { BADGES_DATA, CERTIFICATES_DATA } from '../../data/badgesData';
+import { PERSONAS, generatePersonalizedStudyPack } from '../../data/personaData';
 import ContextTrilogy from '../layout/ContextTrilogy';
 import TodaysMission from './TodaysMission';
 import { 
   Rocket, Award, CheckCircle2, AlertTriangle, ArrowRight, 
-  Terminal, ShieldCheck, FileCheck, Target, Zap, Sparkles
+  Terminal, ShieldCheck, FileCheck, Target, Zap, Sparkles,
+  Download, RefreshCw, Compass, Check, X
 } from 'lucide-react';
 
 export default function LearnerDashboard() {
@@ -14,9 +16,13 @@ export default function LearnerDashboard() {
     name, currentLevel, completedLevels, xp, unlockedBadges, 
     unlockedCertificates, assessmentScores, codeSubmissions, 
     mockAttempts, placementScore, placementStage, setActiveTab, 
-    openModal, knowledgeGaps, clearKnowledgeGap
+    openModal, knowledgeGaps, clearKnowledgeGap,
+    persona, personaGoal, diagnosticScore, updatePersona
   } = useLearner();
 
+  const [showSwitchTrackModal, setShowSwitchTrackModal] = useState(false);
+
+  const activePersonaObj = PERSONAS[persona] || PERSONAS.college;
   const currentLevelObj = LEVELS_DATA.find(l => l.id === currentLevel) || LEVELS_DATA[0];
   const progressPercent = Math.round((completedLevels.length / 25) * 100);
 
@@ -37,6 +43,19 @@ export default function LearnerDashboard() {
     openModal('levelDetail', currentLevelObj);
   };
 
+  const handleDownloadStudyPack = () => {
+    const textContent = generatePersonalizedStudyPack(persona, name, LEVELS_DATA);
+    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Knowledge_Multiverse_${activePersonaObj.title.replace(/\s+/g, '_')}_StudyPack.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-5 pb-24 max-w-lg mx-auto px-4 pt-3">
       {/* Welcome Banner */}
@@ -45,16 +64,30 @@ export default function LearnerDashboard() {
 
         <div className="flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-1.5 text-xs text-amber-400 font-bold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>FAANG READY TRACK</span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r ${activePersonaObj.badgeGradient} text-slate-950 font-bold uppercase tracking-wider`}>
+                {activePersonaObj.badgeText}
+              </span>
+              <button
+                onClick={() => setShowSwitchTrackModal(true)}
+                className="text-[10px] text-slate-400 hover:text-amber-400 underline font-semibold cursor-pointer"
+              >
+                Switch Path
+              </button>
             </div>
+
             <h1 className="text-xl sm:text-2xl font-black text-white mt-1">
               Welcome, <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-200">{name || 'Learner'}</span> 👋
             </h1>
             <p className="text-xs text-slate-400 mt-0.5">
               Knowledge Multiverse • Level {currentLevel} of 25
             </p>
+
+            {diagnosticScore && (
+              <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] text-emerald-300 font-bold">
+                <span>🎯 Diagnostic: {diagnosticScore.score}/{diagnosticScore.total} Correct ({diagnosticScore.percentage}%)</span>
+              </div>
+            )}
           </div>
 
           <div className="text-right">
@@ -80,6 +113,39 @@ export default function LearnerDashboard() {
 
       {/* The Context Trilogy */}
       <ContextTrilogy />
+
+      {/* Personalized Study Pack & Offline Syllabus CTA */}
+      <div className="rounded-3xl bg-gradient-to-r from-[#11172e] via-[#0d1222] to-[#171f38] border border-amber-400/40 p-4 shadow-xl flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0 text-xl shadow-md">
+            📥
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-black text-amber-400 tracking-wider uppercase">
+                OFFLINE STUDY BUNDLE
+              </span>
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-mono">
+                {activePersonaObj.title}
+              </span>
+            </div>
+            <h4 className="text-xs sm:text-sm font-extrabold text-white">
+              Download Tailored Syllabus & Notes
+            </h4>
+            <p className="text-[11px] text-slate-400 line-clamp-1">
+              {activePersonaObj.studyPackTitle}
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={handleDownloadStudyPack}
+          className="py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all transform active:scale-95 cursor-pointer shadow-lg shadow-amber-500/20 shrink-0"
+        >
+          <Download className="w-3.5 h-3.5 fill-slate-950" />
+          <span>Get Pack</span>
+        </button>
+      </div>
 
       {/* Large CTA: CONTINUE LEARNING */}
       <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 rounded-3xl p-5 shadow-xl relative overflow-hidden">
@@ -322,6 +388,68 @@ export default function LearnerDashboard() {
           <ArrowRight className="w-4 h-4" />
         </div>
       </div>
+
+      {/* Switch Path / Persona Modal */}
+      {showSwitchTrackModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="relative w-full max-w-md bg-[#0d1222] border border-amber-400/50 rounded-3xl p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <Compass className="w-4 h-4 text-amber-400" />
+                <h3 className="font-extrabold text-sm text-white">
+                  CHANGE LEARNING TRACK
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowSwitchTrackModal(false)}
+                className="p-1.5 rounded-full bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-300">
+              Select your path to calibrate level recommendations, high-yield notes, and interview prep. Your progress will be preserved.
+            </p>
+
+            <div className="space-y-2.5">
+              {Object.values(PERSONAS).map((p) => {
+                const isSelected = (persona || 'college') === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      updatePersona(p.id);
+                      setShowSwitchTrackModal(false);
+                    }}
+                    className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-amber-500/15 border-amber-400 text-white'
+                        : 'bg-[#090d1a] border-slate-800 text-slate-300 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{p.icon}</span>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-extrabold text-xs text-white">{p.title}</h4>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+                            {p.gradeScope}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          {p.tagline}
+                        </p>
+                      </div>
+                    </div>
+                    {isSelected && <Check className="w-4 h-4 text-amber-400 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
