@@ -1,0 +1,16 @@
+{
+  "short_name": "Multiverse",
+  "name": "Knowledge Multiverse — Zero To Expert",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#07080f",
+  "theme_color": "#f59e0b",
+  "display": "standalone",
+  "orientation": "portrait"
+}
