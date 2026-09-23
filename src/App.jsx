@@ -17,6 +17,7 @@ import MockTestCenter from './components/practice/MockTestCenter';
 import LevelDetailModal from './components/journey/LevelDetailModal';
 import AssessmentRunner from './components/practice/AssessmentRunner';
 import GrandCeremonyModal from './components/journey/GrandCeremonyModal';
+import InstallGuideModal from './components/common/InstallGuideModal';
 
 function AppContent() {
   const { 
@@ -60,6 +61,7 @@ function AppContent() {
       {activeModal === 'levelDetail' && <LevelDetailModal level={modalPayload} onClose={closeModal} />}
       {activeModal === 'assessment' && <AssessmentRunner level={modalPayload} onClose={closeModal} />}
       {activeModal === 'grandCeremony' && <GrandCeremonyModal onClose={closeModal} />}
+      {activeModal === 'installGuide' && <InstallGuideModal onClose={closeModal} />}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLearner } from '../../context/LearnerContext';
-import { Sparkles, Flame, Volume2, VolumeX, Search, ShieldCheck, Briefcase } from 'lucide-react';
+import { Sparkles, Flame, Volume2, VolumeX, Search, ShieldCheck, Briefcase, Smartphone } from 'lucide-react';
 
 export default function MobileHeader() {
   const { xp, streak, soundEnabled, toggleSound, openModal, placementStage } = useLearner();
@@ -47,6 +47,17 @@ export default function MobileHeader() {
         >
           <Briefcase className="w-3.5 h-3.5" />
           <span className="hidden sm:inline text-[11px]">{placementStage.stage}</span>
+        </button>
+
+        {/* Install / Download App Guide */}
+        <button
+          onClick={() => openModal('installGuide')}
+          className="p-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-300 transition-colors flex items-center gap-1"
+          title="Install / Download App"
+          aria-label="Install App"
+        >
+          <Smartphone className="w-4 h-4 text-amber-400 animate-pulse" />
+          <span className="hidden sm:inline text-[11px] font-bold">Install</span>
         </button>
 
         {/* Search */}
