@@ -293,6 +293,35 @@ export default function LearnerDashboard() {
           })}
         </div>
       </div>
+
+      {/* Official Launch Poster Banner */}
+      <div 
+        onClick={() => openModal('poster')}
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-600/15 border border-amber-500/30 p-4 shadow-xl cursor-pointer hover:border-amber-400/60 transition-all flex items-center justify-between group"
+      >
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl overflow-hidden border border-amber-500/40 shadow-md shrink-0 bg-slate-900">
+            <img 
+              src="./poster.jpg" 
+              alt="Knowledge Multiverse Official Poster" 
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 text-[10px] text-amber-400 font-bold uppercase tracking-wider">
+              <Sparkles className="w-3 h-3" />
+              <span>OFFICIAL LAUNCH POSTER</span>
+            </div>
+            <h4 className="text-sm font-extrabold text-white">
+              Knowledge Multiverse • Powered by Kapil
+            </h4>
+            <p className="text-[11px] text-slate-400">Tap to inspect full 3D artwork & share</p>
+          </div>
+        </div>
+        <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors shrink-0">
+          <ArrowRight className="w-4 h-4" />
+        </div>
+      </div>
     </div>
   );
 }
