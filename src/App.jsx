@@ -19,12 +19,13 @@ import LevelDetailModal from './components/journey/LevelDetailModal';
 import AssessmentRunner from './components/practice/AssessmentRunner';
 import GrandCeremonyModal from './components/journey/GrandCeremonyModal';
 import InstallGuideModal from './components/common/InstallGuideModal';
+import AccountLockedScreen from './components/common/AccountLockedScreen';
 import { X } from 'lucide-react';
 
 function AppContent() {
   const { 
     hasOnboarded, activeTab, activeModal, modalPayload, 
-    closeModal, completedLevels, openModal 
+    closeModal, completedLevels, openModal, securityLock 
   } = useLearner();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -38,6 +39,12 @@ function AppContent() {
 
   if (isLoading) {
     return <LoadingSplash onFinished={() => setIsLoading(false)} />;
+  }
+
+  // Enforce 24-hour mandatory login lockout for cheating infractions
+  const isLocked = securityLock?.isLocked && securityLock.lockedUntil && Date.now() < securityLock.lockedUntil;
+  if (isLocked) {
+    return <AccountLockedScreen />;
   }
 
   if (!hasOnboarded) {

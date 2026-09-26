@@ -4,6 +4,17 @@ import confetti from 'canvas-confetti';
 import { BADGES_DATA, CERTIFICATES_DATA } from '../data/badgesData';
 
 const STORAGE_KEY = 'km_learner_state_v1';
+const SECURITY_LOCK_KEY = 'km_security_lock_v1';
+
+const defaultSecurityLock = {
+  isLocked: false,
+  lockedUntil: null,
+  violationReason: '',
+  incidentId: null,
+  incidentTime: null,
+  learnerName: '',
+  persona: ''
+};
 
 const defaultDailyMission = {
   date: new Date().toISOString().slice(0, 10),
@@ -41,13 +52,28 @@ const defaultInitialState = {
   persona: 'college', // 'school' | 'college' | 'professional'
   personaGoal: '',
   diagnosticScore: null, // { score, total, percentage, date }
-  trackViewMode: 'tailored' // 'tailored' | 'all'
+  trackViewMode: 'tailored', // 'tailored' | 'all'
+  securityLock: defaultSecurityLock
 };
 
 const LearnerContext = createContext(null);
 
 export function LearnerProvider({ children }) {
   const [state, setState] = useState(() => {
+    // Check standalone security lock first
+    let activeSecurityLock = defaultSecurityLock;
+    try {
+      const rawLock = localStorage.getItem(SECURITY_LOCK_KEY);
+      if (rawLock) {
+        const parsedLock = JSON.parse(rawLock);
+        if (parsedLock.isLocked && parsedLock.lockedUntil && Date.now() < parsedLock.lockedUntil) {
+          activeSecurityLock = parsedLock;
+        } else {
+          localStorage.removeItem(SECURITY_LOCK_KEY);
+        }
+      }
+    } catch (e) {}
+
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
@@ -57,12 +83,16 @@ export function LearnerProvider({ children }) {
         if (parsed.dailyMission?.date !== today) {
           parsed.dailyMission = { ...defaultDailyMission, date: today };
         }
-        return { ...defaultInitialState, ...parsed };
+        return { 
+          ...defaultInitialState, 
+          ...parsed,
+          securityLock: activeSecurityLock.isLocked ? activeSecurityLock : defaultSecurityLock
+        };
       }
     } catch (e) {
       console.error('Failed to parse learner storage', e);
     }
-    return defaultInitialState;
+    return { ...defaultInitialState, securityLock: activeSecurityLock };
   });
 
   // Save to localStorage on changes
@@ -370,8 +400,47 @@ export function LearnerProvider({ children }) {
     setState(prev => ({ ...prev, activeModal: null, modalPayload: null }));
   };
 
+  const lockAccount = (violationReason) => {
+    const lockedUntil = Date.now() + 24 * 60 * 60 * 1000; // 24 Hours
+    const incidentId = 'INC-' + Date.now();
+    const incidentTime = new Date().toISOString();
+    const newLock = {
+      isLocked: true,
+      lockedUntil,
+      violationReason,
+      incidentId,
+      incidentTime,
+      learnerName: state.name || 'Learner',
+      persona: state.persona || 'college'
+    };
+
+    try {
+      localStorage.setItem(SECURITY_LOCK_KEY, JSON.stringify(newLock));
+    } catch (e) {}
+
+    setState(prev => ({
+      ...prev,
+      securityLock: newLock
+    }));
+    playAudio('error');
+    return newLock;
+  };
+
+  const unlockAccount = () => {
+    try {
+      localStorage.removeItem(SECURITY_LOCK_KEY);
+    } catch (e) {}
+
+    setState(prev => ({
+      ...prev,
+      securityLock: defaultSecurityLock
+    }));
+    playAudio('levelup');
+  };
+
   const resetAllProgress = () => {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(SECURITY_LOCK_KEY);
     setState(defaultInitialState);
   };
 
@@ -384,6 +453,8 @@ export function LearnerProvider({ children }) {
         setOnboarded,
         updatePersona,
         setTrackViewMode,
+        lockAccount,
+        unlockAccount,
         addXP,
         completeLevel,
         recordAssessment,

@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useLearner } from '../../context/LearnerContext';
 import { LEVELS_DATA } from '../../data/curriculumData';
 import { HARD_MOCK_100_QUESTIONS } from '../../data/hardMockQuestions';
+import { sendCheatingIncidentReport, getMailtoSecurityReport } from '../../utils/securityNotifier';
 import { 
   Target, Clock, Award, CheckCircle2, AlertTriangle, ArrowRight, 
   Play, RotateCcw, X, Sparkles, ShieldAlert, ShieldCheck, Flame,
-  Bookmark, Grid, Check, HelpCircle, AlertOctagon, Maximize2
+  Bookmark, Grid, Check, HelpCircle, AlertOctagon, Maximize2, Mail, Lock
 } from 'lucide-react';
 
 export default function MockTestCenter({ initialConfig, onClose }) {
-  const { recordMockAttempt, playAudio, triggerConfetti } = useLearner();
+  const { recordMockAttempt, playAudio, triggerConfetti, lockAccount, name, persona } = useLearner();
   
   // States: 'config' | 'proctor_agreement' | 'in_progress' | 'terminated' | 'result'
   const [testState, setTestState] = useState('config');
@@ -61,10 +62,13 @@ export default function MockTestCenter({ initialConfig, onClose }) {
       setTerminationReason(reason);
       setTestState('terminated');
 
-      // Record disqualified attempt with 0% score
+      // 1. Immediately enforce 24-hour account lockout
+      const lockInfo = lockAccount(reason);
+
+      // 2. Record disqualified attempt with 0% score
       const elapsedSeconds = Math.round((Date.now() - (startTime || Date.now())) / 1000);
       const resultObj = {
-        id: 'mock-disqualified-' + Date.now(),
+        id: lockInfo.incidentId || ('mock-disqualified-' + Date.now()),
         type: 'hard100',
         score: 0,
         total: 100,
@@ -73,12 +77,22 @@ export default function MockTestCenter({ initialConfig, onClose }) {
         timeSpent: `${Math.floor(elapsedSeconds / 60)}m ${elapsedSeconds % 60}s`,
         weakAreas: ['Disqualified due to FAANG Anti-Cheat Proctor Protocol violation'],
         terminationReason: reason,
-        recommendation: 'EXAM CANCELLED & TERMINATED: Zero-tolerance proctor violation detected. Tab switching, screen capture, and inspection are strictly prohibited.',
+        recommendation: 'EXAM CANCELLED & ACCOUNT LOCKED: Zero-tolerance proctor violation detected. Tab switching, screen capture, and inspection are strictly prohibited. Login locked for 24 hours.',
         timestamp: Date.now()
       };
 
       setTestResult(resultObj);
       recordMockAttempt(resultObj);
+
+      // 3. Trigger automated email alerts to kapilnarula27july@gmail.com and namaste@sarlayash.com
+      sendCheatingIncidentReport({
+        incidentId: lockInfo.incidentId,
+        learnerName: name || 'Learner',
+        persona: persona || 'college',
+        violationReason: reason,
+        timeSpent: `${Math.floor(elapsedSeconds / 60)}m ${elapsedSeconds % 60}s`,
+        lockedUntil: lockInfo.lockedUntil
+      });
     };
 
     // 1. Tab switch or window minimization detection
@@ -732,7 +746,7 @@ export default function MockTestCenter({ initialConfig, onClose }) {
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/60 text-left space-y-2">
+            <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/60 text-left space-y-3">
               <div className="flex items-center gap-1.5 text-xs font-black text-rose-400">
                 <AlertTriangle className="w-4 h-4 text-rose-400" />
                 <span className="uppercase tracking-wider">VIOLATION REPORT:</span>
@@ -740,25 +754,34 @@ export default function MockTestCenter({ initialConfig, onClose }) {
               <p className="text-xs text-white leading-relaxed font-mono">
                 {terminationReason || 'Suspicious window focus change or screen capture attempted.'}
               </p>
-              <p className="text-[11px] text-slate-400 pt-1">
-                The Hard-Level Assessment is strictly proctored. Opening other tabs, minimizing the browser, taking screenshots, or accessing developer tools immediately invalidates testing integrity.
-              </p>
+
+              {/* Email Notification Status */}
+              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1 text-[11px]">
+                <span className="font-bold text-slate-300 block flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Security Incident Alert Dispatched:</span>
+                </span>
+                <p className="text-slate-400 font-mono pl-5">
+                  • kapilnarula27july@gmail.com<br />
+                  • namaste@sarlayash.com
+                </p>
+              </div>
+
+              {/* 24-Hour Lockout Notice */}
+              <div className="p-3 rounded-xl bg-rose-900/30 border border-rose-500/40 text-[11px] text-rose-300 flex items-start gap-2">
+                <Lock className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong>24-HOUR LOGIN LOCK ENFORCED:</strong> Your account is locked from taking assessments or logging in for 24 hours.
+                </span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              <button
-                onClick={() => setTestState('config')}
-                className="py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Return to Menu</span>
-              </button>
-
+            <div className="pt-2">
               <button
                 onClick={onClose}
-                className="py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider cursor-pointer"
+                className="w-full py-3.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider cursor-pointer shadow-lg shadow-rose-600/30"
               >
-                Acknowledge & Close
+                Acknowledge Violation & Enter 24h Lockout
               </button>
             </div>
           </div>
