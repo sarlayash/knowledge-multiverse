@@ -318,6 +318,37 @@ export default function LearnerDashboard() {
         </button>
       </div>
 
+      {/* Hard Level 100 MCQ Proctored Mock Challenge */}
+      <div 
+        onClick={() => openModal('mock', { type: 'hard100' })}
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rose-950/40 via-[#181124] to-amber-950/30 border-2 border-rose-500/50 p-4 shadow-xl cursor-pointer hover:border-rose-400 transition-all flex items-center justify-between group"
+      >
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-600 via-rose-500 to-amber-500 flex items-center justify-center text-2xl shadow-lg shadow-rose-500/30 shrink-0 group-hover:scale-105 transition-transform">
+            🔥
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-500 text-slate-950 uppercase font-mono">
+                STRICT PROCTOR
+              </span>
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 uppercase font-mono">
+                2 HOURS • 100 MCQs
+              </span>
+            </div>
+            <h4 className="text-sm sm:text-base font-black text-white mt-0.5">
+              FAANG Hard Mock Assessment
+            </h4>
+            <p className="text-[11px] text-slate-300">
+              Zero tolerance: Tab switch or screenshot triggers instant termination!
+            </p>
+          </div>
+        </div>
+        <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-300 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-slate-950 transition-colors shrink-0">
+          <ArrowRight className="w-4 h-4" />
+        </div>
+      </div>
+
       {/* Achievements & Certificates Previews */}
       <div className="bg-[#0d1222] border border-[#212942] rounded-3xl p-5 shadow-lg">
         <div className="flex items-center justify-between mb-3">
